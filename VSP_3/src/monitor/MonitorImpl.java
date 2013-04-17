@@ -22,14 +22,14 @@ public class MonitorImpl extends MonitorPOA {
 	//Muss im eigenen Thread aufgerufen werden, da sonst CORBA-Exceptions wegen Verbindungsfehlern geworfen werden
 	@Override
 	public void exit() {
-//		new Thread(new Runnable(){
-//
-//			@Override
-//			public void run() {
-//				orb.shutdown(true);
-//			}
-//			
-//		}).start();
-		
+		new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				orb.shutdown(true);
+			}
+			
+		}).start();
+		System.out.println("Monitor wird beendet...");
 	}
 }

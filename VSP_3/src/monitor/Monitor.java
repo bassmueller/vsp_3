@@ -22,12 +22,12 @@ public class Monitor {
 	
 	public static void main(String args[]){
 		try{
-			String lagerName = args[0];
-			String monitorName = args[1];
-			Properties props = new Properties();
-			props.put("org.omg.CORBA.ORBInitialPort", "1050");
-			props.put("org.omg.CORBA.ORBInitialHost", "141.22.27.102");
-			ORB orb = ORB.init(args, props);
+			String lagerName = args[4];
+			String monitorName = args[5];
+			//Properties props = new Properties();
+			//props.put("org.omg.CORBA.ORBInitialPort", "1050");
+			//props.put("org.omg.CORBA.ORBInitialHost", "141.22.27.102");
+			ORB orb = ORB.init(args, null);
 			NamingContextExt nc = NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService"));
 			org.omg.CORBA.Object obj = nc.resolve_str(lagerName);
 			Lager lagerRef = LagerHelper.narrow(obj);
@@ -35,12 +35,11 @@ public class Monitor {
 			POA rootPoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			//TODO: Muss das gemacht werden?
 			rootPoa.the_POAManager().activate(); 
-			System.out.println(args[1]);
 			
 			org.omg.CORBA.Object ref = rootPoa.servant_to_reference(monitor);
 			lagern.Monitor href = MonitorHelper.narrow(ref);
 			lagerRef.monitorHinzufuegen(href);
-			System.out.println("Monitor erfolgereich erstellt!");
+			System.out.printf("Monitor '%s' erfolgereich erstellt!\n", monitorName);
 			orb.run();
 		}catch (InvalidName e) {
 			// TODO Auto-generated catch block
