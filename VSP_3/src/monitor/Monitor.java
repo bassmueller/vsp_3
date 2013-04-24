@@ -1,6 +1,9 @@
+/**
+ * 
+ * @author Martin Schindler, Sebastian Mueller
+ * 
+ */
 package monitor;
-
-import java.util.Properties;
 
 import lagern.Lager;
 import lagern.LagerHelper;
@@ -19,27 +22,48 @@ import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
 public class Monitor {
+    
+    private static String monitorName;
 	
 	public static void main(String args[]){
 		try{
 			String lagerName = args[4];
-			String monitorName = args[5];
+			monitorName = args[5];
 			//Properties props = new Properties();
 			//props.put("org.omg.CORBA.ORBInitialPort", "1050");
 			//props.put("org.omg.CORBA.ORBInitialHost", "141.22.27.102");
-			ORB orb = ORB.init(args, null);
+			final ORB orb = ORB.init(args, null);
 			NamingContextExt nc = NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService"));
 			org.omg.CORBA.Object obj = nc.resolve_str(lagerName);
-			Lager lagerRef = LagerHelper.narrow(obj);
+			final Lager lagerRef = LagerHelper.narrow(obj);
 			MonitorImpl monitor = new MonitorImpl(monitorName, orb);
+			monitor.setLagerRef(lagerRef);
 			POA rootPoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-			//TODO: Muss das gemacht werden?
 			rootPoa.the_POAManager().activate(); 
 			
 			org.omg.CORBA.Object ref = rootPoa.servant_to_reference(monitor);
-			lagern.Monitor href = MonitorHelper.narrow(ref);
+			final lagern.Monitor href = MonitorHelper.narrow(ref);
+			monitor.setHref(href);
 			lagerRef.monitorHinzufuegen(href);
-			System.out.printf("Monitor '%s' erfolgereich erstellt!\n", monitorName);
+			System.out.printf("Monitor \"%s\" erfolgereich erstellt!\n", monitorName);
+			
+            // Shutdown-Hook fuer Beenden mit strg+c
+            Thread hook = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.printf("Monitor \"%s\" wird entfernt...\n", monitorName);
+                    lagerRef.monitorEntfernen(href);
+                    System.out.printf("Monitor \"%s\" wurde entfernt.\n", monitorName);
+                    orb.shutdown(true);
+                }//run
+            });//hook
+            monitor.setHook(hook);
+            
+            // Hook und Objektreferenzen setzen fuer quit() Methode
+            Runtime.getRuntime().addShutdownHook(hook);
+            monitor.setHook(hook);
+            System.out.printf("Monitor \"%s\" gestartet...\n", monitorName);
+			
 			orb.run();
 		}catch (InvalidName e) {
 			// TODO Auto-generated catch block
