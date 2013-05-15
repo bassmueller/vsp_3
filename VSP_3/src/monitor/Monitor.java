@@ -1,9 +1,8 @@
 /**
  * 
- * @author Martin Schindler, Sebastian Mueller
- * 
  */
 package monitor;
+
 
 import lagern.Lager;
 import lagern.LagerHelper;
@@ -21,10 +20,31 @@ import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
+
+
+/**
+ * 
+ * Verteilte Systeme Praktikum: "Aufgabe 1: Lager"
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * 
+ * Monitor Anwendung.
+ * ------------------
+ * 
+ * monitor -ORBInitialHost <IP> -ORBInitialPort <Port> Lager <Monitorname>
+ * 
+ * 
+ * @author Sebastian Mueller 2008588, Martin Schindler 2022759
+ *
+ */
 public class Monitor {
     
     private static String monitorName;
 	
+    
+    /**
+     * 
+     * @param args
+     */
 	public static void main(String args[]){
 		try{
 			String lagerName = args[4];
@@ -39,6 +59,7 @@ public class Monitor {
 			MonitorImpl monitor = new MonitorImpl(monitorName, orb);
 			monitor.setLagerRef(lagerRef);
 			POA rootPoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+			//TODO: Muss das gemacht werden?
 			rootPoa.the_POAManager().activate(); 
 			
 			org.omg.CORBA.Object ref = rootPoa.servant_to_reference(monitor);
@@ -63,30 +84,32 @@ public class Monitor {
             Runtime.getRuntime().addShutdownHook(hook);
             monitor.setHook(hook);
             System.out.printf("Monitor \"%s\" gestartet...\n", monitorName);
-			
+			/*Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {  
+					lagerRef.monitorEntfernen(href);
+					orb.shutdown(true);
+				}
+			});*/
 			orb.run();
 		}catch (InvalidName e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Monitor: ERROR InvalidName");
 		} catch (ServantNotActive e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    System.err.println("Monitor: ERROR ServantNotActive");
 		} catch (WrongPolicy e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    System.err.println("Monitor: ERROR WrongPolicy");
 		} catch (org.omg.CosNaming.NamingContextPackage.InvalidName e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Monitor: ERROR InvalidName");
 		} catch (NotFound e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    System.err.println("Monitor: ERROR NameService NotFound");
 		} catch (CannotProceed e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    System.err.println("Monitor: ERROR CannotProceed");
 		} catch (AdapterInactive e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+		    System.err.println("Monitor: ERROR AdapterInactive");
+		}//try
+	}//main
+	
+	
+	
 
-}
+}//Monitor
